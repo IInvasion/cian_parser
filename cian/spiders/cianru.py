@@ -43,15 +43,19 @@ class CianruSpider(scrapy.Spider):
         driver = webdriver.Chrome()
         driver.get(response.url)
         action = ActionChains(driver)
+        try:
+            thumbs = WebDriverWait(driver, 10).until(
+                EC.presence_of_all_elements_located((By.XPATH, '//div[contains(@class, "fotorama__nav__frame fotorama__nav__frame--thumb")]'))
+            )
 
-        thumbs = WebDriverWait(driver, 10).until(
-            EC.presence_of_all_elements_located((By.XPATH, '//div[contains(@class, "fotorama__nav__frame fotorama__nav__frame--thumb")]'))
-        )
+            action.move_to_element(thumbs[-1]).click().perform()
 
-        action.move_to_element(thumbs[-1]).click().perform()
+            photos = [i.find_element_by_xpath('.//img').get_attribute('src') for i in thumbs]
+            photos.pop()
+        except Exception as e:
+            photos = []
+            print(e)
 
-        photos = [i.find_element_by_xpath('.//img').get_attribute('src') for i in thumbs]
-        photos.pop()
         driver.quit()
 
         loader.add_value('photos', photos)
